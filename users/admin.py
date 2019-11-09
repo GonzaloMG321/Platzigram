@@ -18,4 +18,9 @@ class ProfileAdmin(admin.ModelAdmin):
         'user__last_name', 
         'phone_number')
 
-    list_filter = ('created', 'modified')
+    list_filter = (
+        'user__is_active',
+        'user__is_staff',
+        'created', 
+        'modify'
+        )
