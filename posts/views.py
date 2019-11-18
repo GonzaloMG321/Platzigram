@@ -1,41 +1,38 @@
 """Posts views"""
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+# Django
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-from datetime import datetime
+# Forms
+from posts.forms import PostForm
 
-posts = [
-    {
-        'title': 'Xiaomi Redmi Note 9',
-        'user': {
-            'name': 'Gonzalo',
-            'picture': 'https://img.icons8.com/plasticine/2x/user.png'
-        },
-        'timestamp': datetime.now().strftime('%b %dth, %Y - %H:%M hrs '),
-        'photo': 'https://www.notebookcheck.net/fileadmin/Notebooks/News/_nc3/mi_9_se_gizmo.jpg'
-    },
-    {
-        'title': 'Iphone X',
-        'user': {
-            'name': 'Gonzalo',
-            'picture': 'https://img.icons8.com/plasticine/2x/user.png'
-        },
-        'timestamp': datetime.now().strftime('%b %dth, %Y - %H:%M hrs '),
-        'photo': 'https://static.toiimg.com/photo/61654288.cms'
-    },
-    {
-        'title': 'Macbook Pro',
-        'user': {
-            'name': 'Gonzalo',
-            'picture': 'https://img.icons8.com/plasticine/2x/user.png'
-        },
-        'timestamp': datetime.now().strftime('%b %dth, %Y - %H:%M hrs '),
-        'photo': 'https://cdn.pocket-lint.com/r/s/970x/assets/images/149132-laptops-review-macbook-pro-13-inch-2019-review-business-as-usual-image1-mjmo9napgu.jpg'
-    }
-]
+# Model
+from posts.models import Post
 
+class PostFeedView(LoginRequiredMixin, ListView):
+    """Return all publisheed"""
+    template_name = 'posts/feed.html'
+    model = Post
+    ordering = ('-created')
+    paginate_by = 30
+    context_object_name = 'posts'
 
-@login_required
-def list_posts(request):
-    """list existing posts."""
-    return render(request, 'posts/feed.html', {'posts': posts})
+class PostDetailView(LoginRequiredMixin, DetailView):
+    """Return details of post"""
+    template_name = 'posts/detail.html'
+    queryset = Post.objects.all()
+    context_object_name = 'post'
+
+class CreatePostView(LoginRequiredMixin, CreateView):
+    """Create a new post """
+    template_name = 'posts/new.html'
+    form_class = PostForm
+    success_url = reverse_lazy('posts:feed')
+
+    def get_context_data(self, **kwargs):
+        """Add user and profile to context"""
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        context['profile'] = self.request.user.profile
+        return context
